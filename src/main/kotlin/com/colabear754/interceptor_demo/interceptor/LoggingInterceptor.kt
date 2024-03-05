@@ -19,9 +19,9 @@ class LoggingInterceptor(private val apiLogRepository: ApiLogRepository) : Handl
 
     override fun preHandle(request: HttpServletRequest, response: HttpServletResponse, handler: Any): Boolean {
         if (handler !is HandlerMethod) return true
-        val requestWrapper = request as MultipleReadableRequestWrapper
+        val requestWrapper = if (request is MultipleReadableRequestWrapper) request else MultipleReadableRequestWrapper(request)
         val requestParams = request.parameterMap.map { (key, value) -> "$key=${value.contentToString()}" }.joinToString(", ")
-        val requestBody = objectMapper.readTree(requestWrapper.contents.toString(Charsets.UTF_8))
+        val requestBody = objectMapper.readTree(requestWrapper.contents)
         val requestId = UUID.randomUUID()
         request.setAttribute("requestId", requestId)
         apiLogRepository.save(
